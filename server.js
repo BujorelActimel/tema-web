@@ -40,37 +40,40 @@ function initializeDatabase() {
             FOREIGN KEY (to_currency) REFERENCES currencies (code)
         )`);
 
-        // Inserare date initiale pentru valute
+        // Valute si ratele lor fata de EUR (Euro ca valuta de baza)
         const currencies = [
-            ['EUR', 'Euro'],
-            ['USD', 'US Dollar'],
-            ['GBP', 'British Pound'],
-            ['RON', 'Romanian Leu'],
-            ['CHF', 'Swiss Franc']
+            ['EUR', 'Euro', 1.0],
+            ['USD', 'US Dollar', 1.09],
+            ['GBP', 'British Pound', 0.85],
+            ['RON', 'Romanian Leu', 4.97],
+            ['CHF', 'Swiss Franc', 0.95],
+            ['JPY', 'Japanese Yen', 162.5],
+            ['AUD', 'Australian Dollar', 1.65],
+            ['CAD', 'Canadian Dollar', 1.47],
+            ['PLN', 'Polish Zloty', 4.32],
+            ['HUF', 'Hungarian Forint', 384.76]
         ];
 
+        // Inserare valute
         const insertCurrency = db.prepare('INSERT OR IGNORE INTO currencies (code, name) VALUES (?, ?)');
-        currencies.forEach(currency => {
-            insertCurrency.run(currency);
+        currencies.forEach(([code, name]) => {
+            insertCurrency.run(code, name);
         });
         insertCurrency.finalize();
 
-        // Inserare rate de schimb initiale
-        const rates = [
-            ['EUR', 'RON', 4.97],
-            ['USD', 'RON', 4.56],
-            ['GBP', 'RON', 5.82],
-            ['CHF', 'RON', 5.23],
-            ['EUR', 'USD', 1.09],
-            ['EUR', 'GBP', 0.85],
-            ['EUR', 'CHF', 0.95]
-        ];
-
+        // Generare si inserare rate pentru toate combinatiile posibile
         const insertRate = db.prepare('INSERT OR REPLACE INTO exchange_rates (from_currency, to_currency, rate) VALUES (?, ?, ?)');
-        rates.forEach(rate => {
-            insertRate.run(rate);
-            // Adaugam si rata inversa
-            insertRate.run(rate[1], rate[0], 1/rate[2]);
+        
+        // Pentru fiecare pereche de valute
+        currencies.forEach(([fromCode, , fromRate]) => {
+            currencies.forEach(([toCode, , toRate]) => {
+                if (fromCode !== toCode) {
+                    // Calculam rata folosind EUR ca intermediar
+                    // Rate = (1/fromRate) * toRate
+                    const rate = (1/fromRate) * toRate;
+                    insertRate.run(fromCode, toCode, rate);
+                }
+            });
         });
         insertRate.finalize();
     });
