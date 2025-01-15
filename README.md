@@ -6,8 +6,8 @@ Convertor de valuta
 
 1. Cloneaza repository-ul: (sau descarca-l manual)
 ```bash
-git clone https://github.com/your-username/currency-converter.git
-cd currency-converter
+git clone https://github.com/BujorelActimel/tema-web.git
+cd tema-web
 ```
 
 2. Instaleaza dependentele:
